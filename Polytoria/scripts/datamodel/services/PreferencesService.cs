@@ -58,7 +58,7 @@ public sealed partial class PreferencesService : Instance
 
 	private void OnSettingChanged(SettingChangedEvent setting)
 	{
-	 	object value = setting.NewValue;
+		object value = setting.NewValue;
 
 		if (SettingEnumTypes.TryGetValue(setting.Key, out var enumType))
 		{
