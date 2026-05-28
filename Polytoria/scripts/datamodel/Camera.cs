@@ -481,12 +481,15 @@ public sealed partial class Camera : Dynamic
 			{
 				if (Root.Input.CursorLocked)
 				{
+					Root.Input.CursorVisible = false;
 					Input.MouseMode = Input.MouseModeEnum.Captured;
 					Root.Input.OverrideMousePosTo = GDNode.GetViewport().GetVisibleRect().GetCenter();
+					Root.Input.OverrideMousePos = true;
+					_turning = true;
 				}
 				else
 				{
-					Input.MouseMode = Input.MouseModeEnum.Visible;
+					_turning = false;
 					Root.Input.OverrideMousePos = false;
 				}
 			}
@@ -685,7 +688,6 @@ public sealed partial class Camera : Dynamic
 		if (!Root.Input.CursorLocked)
 		{
 			Root.Input.CursorLocked = false;
-			Root.Input.CursorVisible = true;
 			Root.Input.OverrideMousePos = false;
 			return;
 		}
