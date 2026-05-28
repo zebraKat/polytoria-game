@@ -767,11 +767,14 @@ public sealed partial class Camera : Dynamic
 				if (AlwaysLocked) return;
 				if (btnEvent.Pressed)
 				{
-					StartTurning();
-					Root.Input.CursorLocked = true;
-					Root.Input.CursorVisible = false;
+					if (!Root.Input.CursorLocked)
+					{
+						StartTurning();
+						Root.Input.CursorLocked = true;
+						Root.Input.CursorVisible = false;
+					}
 				}
-				else
+				else if (_turning)
 				{
 					StopTurning();
 					Root.Input.CursorLocked = false;
@@ -811,7 +814,7 @@ public sealed partial class Camera : Dynamic
 		if (@event is InputEventMouseMotion mouseEvent)
 		{
 			if (Root.Input.IsTouchscreen) return;
-			if (_turning)
+			if (_turning && Root.Input.CursorLocked)
 			{
 				RotateCamera(mouseEvent.Relative);
 			}
