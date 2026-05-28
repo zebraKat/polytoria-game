@@ -479,9 +479,16 @@ public sealed partial class Camera : Dynamic
 
 			if ((IsFirstPerson || AlwaysLocked) && Root.Input.IsGameFocused)
 			{
-				// Force mouse captured
-				Input.MouseMode = Input.MouseModeEnum.Captured;
-				Root.Input.OverrideMousePosTo = GDNode.GetViewport().GetVisibleRect().GetCenter();
+				if (Root.Input.CursorLocked)
+				{
+					Input.MouseMode = Input.MouseModeEnum.Captured;
+					Root.Input.OverrideMousePosTo = GDNode.GetViewport().GetVisibleRect().GetCenter();
+				}
+				else
+				{
+					Input.MouseMode = Input.MouseModeEnum.Visible;
+					Root.Input.OverrideMousePos = false;
+				}
 			}
 
 			if (_targetZoom <= 0)
@@ -613,6 +620,8 @@ public sealed partial class Camera : Dynamic
 	{
 		if (Mode != CameraModeEnum.Follow) return;
 		IsFirstPerson = true;
+		Root.Input.CursorLocked = true;
+		Root.Input.CursorVisible = false;
 		_targetZoom = 0;
 		StartTurning();
 		FirstPersonEntered?.Invoke();
@@ -622,6 +631,8 @@ public sealed partial class Camera : Dynamic
 	{
 		if (Mode != CameraModeEnum.Follow) return;
 		IsFirstPerson = false;
+		Root.Input.CursorLocked = false;
+		Root.Input.CursorVisible = true;
 		if (resetZoom)
 		{
 			_targetZoom = DefaultZoomDistance;
@@ -671,6 +682,14 @@ public sealed partial class Camera : Dynamic
 		if (Mode != CameraModeEnum.Follow) return;
 		_turning = true;
 
+		if (!Root.Input.CursorLocked)
+		{
+			Root.Input.CursorLocked = false;
+			Root.Input.CursorVisible = true;
+			Root.Input.OverrideMousePos = false;
+			return;
+		}
+
 		Vector2 screenCenter = GDNode.GetViewport().GetVisibleRect().GetCenter();
 		_turnStartPos = GDNode.GetViewport().GetMousePosition();
 		GDNode.GetViewport().WarpMouse(screenCenter);
@@ -686,12 +705,19 @@ public sealed partial class Camera : Dynamic
 		_turning = false;
 		if (!Root.Input.CursorLocked)
 		{
-			Input.MouseMode = Input.MouseModeEnum.Visible;
+			Root.Input.CursorVisible = true;
+			Root.Input.CursorLocked = false;
 			Root.Input.OverrideMousePos = false;
 			GDNode.GetViewport().WarpMouse(_turnStartPos);
 #if GODOT_WINDOWS
 			GDNode.GetViewport().WarpMouse(_turnStartPos); // Workaround for godotengine/godot#119205
 #endif
+		}
+		else
+		{
+			Root.Input.CursorVisible = false;
+			Root.Input.CursorLocked = true;
+			Root.Input.OverrideMousePos = false;
 		}
 	}
 
@@ -742,11 +768,24 @@ public sealed partial class Camera : Dynamic
 				if (btnEvent.Pressed)
 				{
 					StartTurning();
+					Root.Input.CursorLocked = true;
+					Root.Input.CursorVisible = false;
 				}
 				else
 				{
 					StopTurning();
+					Root.Input.CursorLocked = false;
+					Root.Input.CursorVisible = true;
 				}
+			}
+		}
+
+		if (@event is InputEventMouseMotion mouseEvent)
+		{
+			if (Root.Input.IsTouchscreen) return;
+			if (_turning && Root.Input.CursorLocked)
+			{
+				RotateCamera(mouseEvent.Relative);
 			}
 		}
 
