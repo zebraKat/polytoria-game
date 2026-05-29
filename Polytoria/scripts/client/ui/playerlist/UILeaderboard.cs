@@ -89,7 +89,7 @@ public partial class UILeaderboard : Control
 		base._Process(delta);
 	}
 
-	private void OnStatDefinitionChanged(Stat _)
+	private void OnStatDefinitionChanged(Stat stat)
 	{
 		CreateHeader();
 		Refresh();
@@ -377,13 +377,14 @@ public partial class UILeaderboard : Control
 		if (statsBox == null)
 			return;
 
-		while (statsBox.GetChildCount() > 0)
+		foreach (Node node in statsBox.GetChildren())
 		{
-			statsBox.GetChild(0).QueueFree();
+			node.QueueFree();
 		}
 
 		foreach (var stat in Stats.GetStats())
 		{
+			if (stat.IsDeleted) continue;
 			Label headerLabel = new()
 			{
 				Text = stat.GetDisplayName(),
